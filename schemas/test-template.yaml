@@ -1,18 +1,23 @@
-$schema: ./assets/schema.json
+$schema: https://raw.githubusercontent.com/ArturJD96/tei-schema/refs/heads/main/schemas/test-case.json
 tests:
+
 - description: Tested tag's name.
   comment: Additional comment (not required).
   schema:
     ... schema ...
   tests:
-    ...
 
-# tests:
-#   - description: Description of the unit test.
-#     comment: Additional comment (not required).
-#     data:
-#       ... data validated against schema ...
-#
+  - description: Description of passing unit test.
+    comment: Additional comment (not required).
+    data:
+      ... data validated against schema ...
+    valid: true
+
+  - description: Description of failing unit test.
+    comment: Additional comment (not required).
+    data:
+      ... data validated against schema ...
+    valid: false
 
 
   # specification:
