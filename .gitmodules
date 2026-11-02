@@ -1,0 +1,3 @@
+[submodule "TEI"]
+	path = TEI
+	url = https://github.com/TEIC/TEI.git

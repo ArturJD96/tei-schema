@@ -1,0 +1,18 @@
+$schema: ./assets/schema.json
+tests:
+- description: Tested tag's name.
+  comment: Additional comment (not required).
+  schema:
+    ... schema ...
+  tests:
+    ...
+
+# tests:
+#   - description: Description of the unit test.
+#     comment: Additional comment (not required).
+#     data:
+#       ... data validated against schema ...
+#
+
+
+  # specification:

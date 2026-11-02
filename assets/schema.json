@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Workaround for still including reference to the original test suite schema when the described document is an array.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "./schema.json"
+    },
+    "tests": {
+      "$ref": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/refs/heads/main/test-schema.json"
+    }
+  },
+  "additionalProperties": false
+}
