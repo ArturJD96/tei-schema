@@ -4,7 +4,7 @@
   "type": "object",
   "properties": {
     "$schema": {
-      "const": "./schema.json"
+      "const": "https://raw.githubusercontent.com/ArturJD96/tei-schema/refs/heads/main/schemas/test-case.json"
     },
     "tests": {
       "$ref": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/refs/heads/main/test-schema.json"
