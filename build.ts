@@ -28,4 +28,4 @@ function parseSpecDict(dir: string): {[specName: string]: object} {
 
 const specs = parseSpecDict(SPECS_DIR)
 
-writeFileSync('tei-specs.json', JSON.stringify(specs, null, 2))
+writeFileSync('./dist/tei-specs.json', JSON.stringify(specs, null, 2))
