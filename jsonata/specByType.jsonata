@@ -19,6 +19,15 @@
 
   )};
 
+  $reportAttrUnsupported := function($el, $attrDict) {(
+
+    /* TO DO: print warning if attr is currently unsupported. */
+
+    /* $warn('Following attributes of <'&$el.name&'> are not supported: '&$attrDict) */
+
+  )};
+
+
 
   /* For JSON */
 
@@ -32,14 +41,27 @@
       $attrs := $el.attributes;
       $assertAttrSupport($el, {
         'ident': 'string',
-        'usage': ['req', 'rec', 'opt'],
+        'usage': ['req', 'rec', 'opt'], /* Handled at attList. */
         'mode': ['add', 'change', 'delete', 'replace'],
         'module': 'string',
         /* Description */
         'validUntil': 'string'
       });
 
-      { 'test': $el.name }
+      $reportAttrUnsupported($el, {
+        'mode': ['add', 'change', 'delete', 'replace'],
+        'module': 'string',
+        /* Description */
+        'validUntil': 'string'
+      });
+
+      {
+        $attrs.ident: {
+          'title': $attrs.ident,
+          '$comment': ($attrs.usage = 'rec') ? "Recommended."
+          /* TO DO: $el */
+        }
+      }
 
     )},
 
@@ -58,19 +80,18 @@
     'attList': function($el) {(
 
       $attrs := $el.attributes;
+      $required := $el.**[type='element' and name='attDef' and attributes.usage='req'].attributes.ident[];
 
       /*
         TO DO: org attribute support.
         I don't understand what it does...
       */
       $assertAttrSupport($el, { 'org': ['group', 'choice'] });
-      /*
-      $org := $attrs.org;
-      $org != 'group' ? $error('Unsupported <attList> argument for @org: ' & $org);
-      */
+      $reportAttrUnsupported($el, { 'org': ['group', 'choice'] });
 
       {
-        'properties': $handleElementsForJSON($el)
+        'properties': $handleElementsForJSON($el),
+        'required': $required
       }
 
     )},
