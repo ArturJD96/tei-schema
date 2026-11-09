@@ -1,7 +1,7 @@
 $schema: https://raw.githubusercontent.com/ArturJD96/tei-schema/refs/heads/main/schemas/test-case.json
 tests:
 
-- description: Tested tag's name.
+- description: Test name (or simply tag's name).
   comment: Additional comment (not required).
   schema:
     ... schema ...
