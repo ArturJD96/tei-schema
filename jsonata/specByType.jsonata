@@ -1,0 +1,185 @@
+(
+
+  $specs := *.elements[type='element'];
+  $specTypes := $specs.name ~> $distinct;
+  $specDirectives := $specs.elements.name ~> $distinct;
+
+  /*
+    Explicitly list supported tag's attributes
+    (and their supported values)
+  */
+  $assertAttrSupport := function($el, $attrDict) {(
+
+    $attrs := $el.attributes;
+    $each($el.attributes, function($attrVal, $attrName) {(
+      $attr := $lookup($attrDict, $attrName);
+      $attr ?? $error('Unsupported argument "'&$attrName&'" for <'&$el.name&'>.');
+      ($type($attr) = 'array') ? ($attrVal in $attr) ?: $error('Unsupported argument: <'&$el.name&' '&$attrName&'="'&$attrVal&'"> (supporting only ['&$join($attr, ',')&']).')
+    )})
+
+  )};
+
+
+  /* For JSON */
+
+  $unhandled := function($el) { { '$ERROR_UNHANDLED': $el.name } };
+
+
+  $handlersJSON := {
+
+    'attDef': function($el) {(
+
+      $attrs := $el.attributes;
+      $assertAttrSupport($el, {
+        'ident': 'string',
+        'usage': ['req', 'rec', 'opt'],
+        'mode': ['add', 'change', 'delete', 'replace'],
+        'module': 'string',
+        /* Description */
+        'validUntil': 'string'
+      });
+
+      { 'test': $el.name }
+
+    )},
+
+    'attRef': function($el) {(
+
+      { 'test': $el.name }
+
+    )},
+
+
+    /* Top-level handlers */
+
+    /*
+        Turn <attList> into {properties}.
+    */
+    'attList': function($el) {(
+
+      $attrs := $el.attributes;
+
+      /*
+        TO DO: org attribute support.
+        I don't understand what it does...
+      */
+      $assertAttrSupport($el, { 'org': ['group', 'choice'] });
+      /*
+      $org := $attrs.org;
+      $org != 'group' ? $error('Unsupported <attList> argument for @org: ' & $org);
+      */
+
+      {
+        'properties': $handleElementsForJSON($el)
+      }
+
+    )},
+
+    'content': $unhandled,
+
+    'equiv': $unhandled,
+
+    'constraintSpec': $unhandled,
+
+    /*
+        Turn <classes> to {allOf:anyOf} with references to classes.
+    */
+    'classes': function($el) {(
+
+        $classTags := ['memberOf']; /* ONLY? How to derive it from the spec? */
+
+        $memberOfs := $el.elements[type='element' and name='memberOf'];
+        $attrs := $memberOfs.attributes;
+
+        $memberOfs.elements[type='text'] ? $error('Unsupported <memberOf> with text content as reference: ' & $memberOfs.elements[type='text']);
+        $assertAttrSupport($el, { 'mode': ['add','delete']});
+        /* TO DO: support attrs 'min' and 'max'. */
+
+
+        $addClasses := $attrs[(mode ?? 'add')='add'].key;
+        $delClasses := $attrs[mode='delete'].key;
+        $not($attrs.mode ?: 'add' in ['add', 'delete']) ? $error('Unsupported $memberOf mode: ' & $attr.mode);
+
+        ($addClasses or $delClasses) ? {
+            "allOf": [
+                $addClasses ? { "anyOf": $addClasses.{ '$ref': '#/$defs/' & $ } },
+                $delClasses ? { "not": { "anyOf": $delClasses.{ '$ref': '#/$defs/' & $ } } }
+            ]
+        }
+
+    )}
+
+  };
+
+
+  /*
+    Hydrate tag with JSON Schema description
+    and remove description elements.
+  */
+  $describe := function($spec) {(
+
+    $contains($spec.name, /.+Spec$/) ?: $error('Unsupported spec element: ' & ($spec.name ?? $spec));
+
+    $descriptorTags := [
+        'gloss',
+        'desc',
+        'remarks',
+        'exemplum',
+        'listRef'
+    ];
+
+    $description := {
+
+        "title": "",
+        "$comment": "",
+        "description": "",
+        "examples": [""],
+        "deprecated": false
+
+    };
+
+    /*
+    $gloss := $spec.elements[name='gloss'].elements;
+    $desc := $spec.elements[name='desc'].elements;
+    $remarks := $spec.elements[name='remarks'].elements;
+    $listRef := $spec.elements[name='listRef'].elements;
+    */
+
+    $descriptors := $spec.elements[name in $descriptorTags];
+    /* TO DO: merge this description! */
+    $spec ~> | $ | { "elements": $.elements[$not(name in $descriptorTags)] ?: [] } |
+
+  )};
+
+  /*
+    Handle each child element.
+  */
+  $handleElementsForJSON := function($spec) {(
+
+    $xmlTags := ['type', 'name', 'attributes', 'elements'];
+
+    $handle := function($el) {(
+        $handler := $lookup($handlersJSON, $el.name);
+        $handler ?? $error('Unhandled element: ' & ($el.name ? '<' & $el.name &'>' : $el));
+        $handler($el)
+    )};
+
+    $elems := $spec.elements[type='element'];
+    $handledElems := $merge($map($elems, $handle));
+
+    $spec ~> | $ | $handledElems, $xmlTags |
+
+  )};
+
+  /*
+    Group tags definitions by spec type.
+  */
+  $specsByType := $specTypes#$s.{
+    $: $specs[name=$specTypes[$s]].{
+      attributes.ident: $ ~> $describe ~> $handleElementsForJSON
+    } ~> $merge
+  } ~> $merge;
+
+  $specsByType
+
+)
