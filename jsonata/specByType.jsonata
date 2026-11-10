@@ -1,9 +1,5 @@
 (
 
-  $specs := *.elements[type='element'];
-  $specTypes := $specs.name ~> $distinct;
-  $specDirectives := $specs.elements.name ~> $distinct;
-
   /*
     Explicitly list supported tag's attributes
     (and their supported values)
@@ -36,6 +32,32 @@
 
   $handlersJSON := {
 
+    '_template_': function($el) {(
+
+      $assertAttrSupport($el, {});
+      $reportAttrUnimplemented($el);
+      $handleChildrenForJSON($el);
+
+    )},
+
+    'alternate': function($el) {(
+
+      $assertAttrSupport($el, { 'minOccurs': 'number', 'maxOccurs': 'number' });
+      $reportAttrUnimplemented($el, {'minOccurs': 'number',  'maxOccurs': 'number' } );
+      $handleChildrenForJSON($el);
+
+      {
+        'oneOf': $map($el.elements[type='element'], $handleElemForJSON)
+      }
+
+    )},
+
+    'anyElement': function($el) {(
+
+
+
+    )},
+
     'attDef': function($el) {(
 
       $attrs := $el.attributes;
@@ -55,6 +77,8 @@
         'validUntil': 'string'
       });
 
+      $handleChildrenForJSON($el);
+
       {
         $attrs.ident: {
           'title': $attrs.ident,
@@ -65,14 +89,144 @@
 
     )},
 
-
     'attRef': function($el) {(
 
       { 'test': $el.name }
 
     )},
 
-    /* Top-level handlers */
+    'classRef': function($el) {(
+
+      $assertAttrSupport($el, { 'key': 'string', 'minOccurs': 'number', 'maxOccurs': 'number', 'expand': 'string' });
+      $reportAttrUnimplemented($el, { 'minOccurs': 'number', 'maxOccurs': 'number', 'expand': 'string' });
+      $handleChildrenForJSON($el);
+
+      {
+        '$ref': '#/$defs/' & $el.attributes.key
+      }
+
+    )},
+
+    'dataRef': function($el) {(
+
+      $assertAttrSupport($el, { 'key':'string', 'name': 'string', 'restriction': 'pattern' });
+      $reportAttrUnimplemented($el, { 'key':'string', 'name': 'string', 'restriction': 'pattern'  });
+      $handleChildrenForJSON($el);
+
+    )},
+
+    'datatype': function($el) {(
+
+      $assertAttrSupport($el, { 'minOccurs': 'number', 'maxOccurs': 'number' });
+      $reportAttrUnimplemented($el, { 'minOccurs': 'number', 'maxOccurs': 'number' });
+      $handleChildrenForJSON($el);
+
+    )},
+
+    'defaultVal': function($el) {(
+
+      $assertAttrSupport($el, {});
+      $reportAttrUnimplemented($el);
+      $handleChildrenForJSON($el);
+
+    )},
+
+    'elementRef': function($el) {(
+
+      $assertAttrSupport($el, { 'key': 'string', 'minOccurs': 'number', 'maxOccurs': 'number'  });
+      $reportAttrUnimplemented($el, { 'minOccurs': 'number', 'maxOccurs': 'number'  });
+      $handleChildrenForJSON($el);
+
+      {
+        '$ref': '#/$defs/' & $el.attributes.key
+      }
+
+    )},
+
+    'empty': function($el) {(
+
+      $assertAttrSupport($el, {});
+      $reportAttrUnimplemented($el, {});
+
+      $handleChildrenForJSON($el);
+
+    )},
+
+    'macroRef': function($el) {(
+
+      $assertAttrSupport($el, { 'key':'string' });
+      $reportAttrUnimplemented($el, { 'key':'string' });
+
+      $handleChildrenForJSON($el);
+
+    )},
+
+    'paramList': function($el) {(
+
+      $assertAttrSupport($el, {});
+      $reportAttrUnimplemented($el, {});
+
+      $handleChildrenForJSON($el);
+
+    )},
+
+    'paramSpec': function($el) {(
+
+      $assertAttrSupport($el, { 'ident': 'string' });
+      $reportAttrUnimplemented($el, {});
+
+      $handleChildrenForJSON($el);
+
+    )},
+
+    'sequence': function($el) {(
+
+      $assertAttrSupport($el, { 'minOccurs': 'number', 'maxOccurs': 'number' });
+      $reportAttrUnimplemented($el, { 'minOccurs': 'number', 'maxOccurs': 'number' });
+
+      $handleChildrenForJSON($el);
+
+    )},
+
+    'textNode': function($el) {(
+
+      $assertAttrSupport($el, {});
+      $reportAttrUnimplemented($el);
+      $handleChildrenForJSON($el);
+
+    )},
+
+    'valList': function($el) {(
+
+      $assertAttrSupport($el, { 'type':['closed', 'semi', 'open'], 'xml:lang':'string' });
+      $reportAttrUnimplemented($el, { type':['closed', 'semi', 'open'], 'xml:lang':'string' });
+
+      $handleChildrenForJSON($el);
+
+    )},
+
+    'valDesc': function($el) {(
+
+      $assertAttrSupport($el, { 'xml:lang':'string' });
+      $reportAttrUnimplemented($el, { 'xml:lang':'string' });
+
+      $handleChildrenForJSON($el);
+
+    )},
+
+    'valItem': function($el) {(
+
+      $assertAttrSupport($el, { 'ident': 'string' });
+      $reportAttrUnimplemented($el, { 'ident': 'string' });
+
+      $handleChildrenForJSON($el);
+
+    )},
+
+
+    /*
+     *  Top-level handlers
+     */
 
     /*
         Turn <attList> into {properties}.
@@ -90,13 +244,24 @@
       $reportAttrUnimplemented($el, { 'org': ['group', 'choice'] });
 
       {
-        'properties': $handleElementsForJSON($el),
-        'required': $required
+        'properties': $handleChildrenForJSON($el),
+        'required': $required,
+        'additionalProperties': false
       }
 
     )},
 
-    'content': $unhandled,
+    'content': function($el) {(
+
+      {
+        'items': {
+
+          'ch': $handleChildrenForJSON($el)
+
+        }
+      }
+
+    )},
 
     'equiv': $unhandled,
 
@@ -128,6 +293,126 @@
             ]
         }
 
+    )},
+
+    /*
+        Spec classes.
+    */
+
+    'elementSpec': function($el) {(
+
+      $assertAttrSupport($el, {
+
+        'ns': 'string',
+        'xmlns': 'string',
+        'xmlns:sch': 'string',
+        'xmlns:teix': 'string',
+        'xmlns:xi': 'string',
+        'xmlns:rng': 'string',
+        'module': 'string',
+        'xml:id': 'string',
+        'ident': 'string',
+        'mode': ['add'],
+        'validUntil': 'string'
+
+      });
+
+      $reportAttrUnimplemented($el, {
+        'ns': 'string',
+        'xmlns': 'string',
+        'xmlns:sch': 'string',
+        'xmlns:teix': 'string',
+        'xmlns:xi': 'string',
+        'xmlns:rng': 'string',
+        'module': 'string',
+        'xml:id': 'string',
+
+        'ident': 'string',
+        'mode': 'string',
+        'validUntil': 'string'
+      });
+
+      $handleChildrenForJSON($el)
+
+    )},
+
+    'classSpec': function($el) {(
+
+      $assertAttrSupport($el, {
+
+        'xml:id': 'string',
+        'xmlns': 'string',
+        'xmlns:sch': 'string',
+        'xmlns:rng': 'string',
+
+        'ident': 'string',
+        'module': 'string',
+        'type': 'string',
+        'predeclare': 'string'
+
+      });
+
+      $reportAttrUnimplemented($el, {
+        'xml:id': 'string',
+        'xmlns': 'string',
+        'xmlns:sch': 'string',
+        'xmlns:rng': 'string',
+        'ident': 'string',
+        'module': 'string',
+        'type': 'string',
+        'predeclare': 'string'
+      });
+
+      $handleChildrenForJSON($el)
+
+    )},
+
+    'macroSpec': function($el) {(
+
+      $assertAttrSupport($el, {
+
+        'xml:id': 'string',
+        'xmlns': 'string',
+        'xmlns:rng': 'string',
+
+        'ident': 'string',
+        'module': 'string',
+        'mode': 'string'
+
+      });
+
+      $reportAttrUnimplemented($el, {
+        'xml:id': 'string',
+        'xmlns': 'string',
+        'xmlns:rng': 'string',
+        'ident': 'string',
+        'module': 'string',
+        'mode': 'string'
+      });
+
+      $handleChildrenForJSON($el)
+
+    )},
+
+    'dataSpec': function($el) {(
+
+      $assertAttrSupport($el, {
+
+        'xml:id': 'string',
+        'xmlns': 'string',
+
+        'ident': 'string',
+        'module': 'string'
+
+      });
+
+      $reportAttrUnimplemented($el, {
+        'xml:id': 'string',
+        'xmlns': 'string',
+        'ident': 'string',
+        'module': 'string'
+      });
+
     )}
 
   };
@@ -137,9 +422,11 @@
     Hydrate tag with JSON Schema description
     and remove description elements.
   */
-  $describe := function($spec) {(
+  $describe := function($el) {(
 
-    $contains($spec.name, /.+Spec$/) ?: $error('Unsupported spec element: ' & ($spec.name ?? $spec));
+    /*
+    $contains($el.name, \/.+Spec$\/) ?: $error('Unsupported spec element: ' & ($spec.name ?? $spec));
+    */
 
     $descriptorTags := [
         'gloss',
@@ -160,24 +447,31 @@
     };
 
     /*
-    $gloss := $spec.elements[name='gloss'].elements;
-    $desc := $spec.elements[name='desc'].elements;
-    $remarks := $spec.elements[name='remarks'].elements;
-    $listRef := $spec.elements[name='listRef'].elements;
+    $gloss := $el.elements[name='gloss'].elements;
+    $desc := $el.elements[name='desc'].elements;
+    $remarks := $el.elements[name='remarks'].elements;
+    $listRef := $el.elements[name='listRef'].elements;
     */
 
-    $descriptors := $spec.elements[name in $descriptorTags];
+    $descriptors := $el.elements[name in $descriptorTags];
     /* TO DO: merge this description! */
-    $spec ~> | $ | { "elements": $.elements[$not(name in $descriptorTags)] ?: [] } |
+    $el ~> | $ | { "elements": $.elements[$not(name in $descriptorTags)] ?: [] } |
+
+  )};
+
+  $handleChildrenForJSON := function($el) {(
+
+    $children := $el.elements[type='element'];
+    $handledChildren := $merge($map($children, $handleElemForJSON));
+
+    $handledChildren
 
   )};
 
   /*
     Handle each child element.
   */
-  $handleElementsForJSON := function($spec) {(
-
-    $xmlTags := ['type', 'name', 'attributes', 'elements'];
+  $handleElemForJSON := function($el) {(
 
     $handle := function($el) {(
         $handler := $lookup($handlersJSON, $el.name);
@@ -185,22 +479,31 @@
         $handler($el)
     )};
 
-    $elems := $spec.elements[type='element'];
-    $handledElems := $merge($map($elems, $handle));
+    $elHandled := $el ~> $describe ~> $handle;
 
-    $spec ~> | $ | $handledElems, $xmlTags |
+    /* Clean-up */
+    $xmlTags := ['type', 'name', 'attributes', 'elements'];
+    $elHandled ~> | $ | $, $xmlTags |
 
   )};
 
   /*
     Group tags definitions by spec type.
   */
+  $specs := *.elements[type='element'];
+  $specTypes := $specs.name ~> $distinct;
+  /* $specDirectives := $specs.elements.name ~> $distinct; */
+
   $specsByType := $specTypes#$s.{
     $: $specs[name=$specTypes[$s]].{
-      attributes.ident: $ ~> $describe ~> $handleElementsForJSON
+      attributes.ident: $ ~> $handleElemForJSON
     } ~> $merge
   } ~> $merge;
 
-  $specsByType
+  $specsByType;
+
+  $specs.{
+    attributes.ident: $ ~> $handleElemForJSON
+  } ~> $merge;
 
 )

@@ -26,8 +26,8 @@ const queryTagsBySpecType = readFileSync('./jsonata/specByType.jsonata', 'utf8')
 
 const tagsBySpecType = await query(specs, queryTagsBySpecType)
 
-// console.log(tagsBySpecType)
-console.log(tagsBySpecType.classSpec['att.global.analytic'])
+console.log(tagsBySpecType)
+// console.log(tagsBySpecType.classSpec['att.textCritical'])
 process.exit()
 
 
