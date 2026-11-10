@@ -19,7 +19,7 @@
 
   )};
 
-  $reportAttrUnsupported := function($el, $attrDict) {(
+  $reportAttrUnimplemented := function($el, $attrDict) {(
 
     /* TO DO: print warning if attr is currently unsupported. */
 
@@ -48,7 +48,7 @@
         'validUntil': 'string'
       });
 
-      $reportAttrUnsupported($el, {
+      $reportAttrUnimplemented($el, {
         'mode': ['add', 'change', 'delete', 'replace'],
         'module': 'string',
         /* Description */
@@ -65,12 +65,12 @@
 
     )},
 
+
     'attRef': function($el) {(
 
       { 'test': $el.name }
 
     )},
-
 
     /* Top-level handlers */
 
@@ -87,7 +87,7 @@
         I don't understand what it does...
       */
       $assertAttrSupport($el, { 'org': ['group', 'choice'] });
-      $reportAttrUnsupported($el, { 'org': ['group', 'choice'] });
+      $reportAttrUnimplemented($el, { 'org': ['group', 'choice'] });
 
       {
         'properties': $handleElementsForJSON($el),
